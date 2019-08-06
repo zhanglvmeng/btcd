@@ -1,0 +1,64 @@
+package: github.com/zhanglvmeng/btcd
+import:
+- package: github.com/btcsuite/btcd
+  subpackages:
+  - addrmgr
+  - blockchain
+  - blockchain/indexers
+  - btcec
+  - btcjson
+  - chaincfg
+  - chaincfg/chainhash
+  - connmgr
+  - database
+  - database/ffldb
+  - database/internal/treap
+  - limits
+  - mempool
+  - mining
+  - mining/cpuminer
+  - netsync
+  - peer
+  - rpcclient
+  - txscript
+  - wire
+- package: github.com/btcsuite/btclog
+- package: github.com/btcsuite/btcutil
+  subpackages:
+  - bloom
+  - gcs
+  - gcs/builder
+  - hdkeychain
+- package: github.com/btcsuite/go-socks
+  subpackages:
+  - socks
+- package: github.com/btcsuite/goleveldb
+  version: v1.0.0
+  subpackages:
+  - leveldb
+  - leveldb/comparer
+  - leveldb/errors
+  - leveldb/filter
+  - leveldb/iterator
+  - leveldb/opt
+  - leveldb/util
+- package: github.com/btcsuite/websocket
+- package: github.com/btcsuite/winsvc
+  version: v1.0.0
+  subpackages:
+  - eventlog
+  - mgr
+  - svc
+- package: github.com/davecgh/go-spew
+  version: v1.1.1
+  subpackages:
+  - spew
+- package: github.com/jessevdk/go-flags
+  version: v1.4.0
+- package: github.com/jrick/logrotate
+  version: v1.0.0
+  subpackages:
+  - rotator
+- package: golang.org/x/crypto
+  subpackages:
+  - ripemd160

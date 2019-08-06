@@ -40,9 +40,14 @@ var winServiceMain func() (bool, error)
 // optional serverChan parameter is mainly used by the service code to be
 // notified with the server once it is setup so it can gracefully stop it when
 // requested from the service control manager.
+// 真正的开始。
+// 参数中的chan 主要是为了当service control manager想优雅地关闭服务时使用。
 func btcdMain(serverChan chan<- *server) error {
+	// Show version at startup.
+
 	// Load configuration and parse command line.  This function also
 	// initializes logging and configures it accordingly.
+	// 加载配置，解析指令。这个方法中也会初始化日志，并相应地检查了某些配置规则是否满足要求。
 	tcfg, _, err := loadConfig()
 	if err != nil {
 		return err
@@ -57,13 +62,15 @@ func btcdMain(serverChan chan<- *server) error {
 	// Get a channel that will be closed when a shutdown signal has been
 	// triggered either from an OS signal such as SIGINT (Ctrl+C) or from
 	// another subsystem such as the RPC server.
+	// 定义一个channel，便于接受shutdown 信号。
 	interrupt := interruptListener()
 	defer btcdLog.Info("Shutdown complete")
 
 	// Show version at startup.
 	btcdLog.Infof("Version %s", version())
-
+	btcdLog.Infof("Welcome to zhangpeng's bitcoin world~~~~")
 	// Enable http profiling server if requested.
+	// 设定 http profiling server .
 	if cfg.Profile != "" {
 		go func() {
 			listenAddr := net.JoinHostPort("", cfg.Profile)
@@ -76,6 +83,7 @@ func btcdMain(serverChan chan<- *server) error {
 	}
 
 	// Write cpu profile if requested.
+	// cpu profile 分析。
 	if cfg.CPUProfile != "" {
 		f, err := os.Create(cfg.CPUProfile)
 		if err != nil {
@@ -119,6 +127,7 @@ func btcdMain(serverChan chan<- *server) error {
 	//
 	// NOTE: The order is important here because dropping the tx index also
 	// drops the address index since it relies on it.
+	// 从DB中删除某个addr 索引。删完就退出了。
 	if cfg.DropAddrIndex {
 		if err := indexers.DropAddrIndex(db, interrupt); err != nil {
 			btcdLog.Errorf("%v", err)
@@ -127,6 +136,7 @@ func btcdMain(serverChan chan<- *server) error {
 
 		return nil
 	}
+	// 删除交易索引。
 	if cfg.DropTxIndex {
 		if err := indexers.DropTxIndex(db, interrupt); err != nil {
 			btcdLog.Errorf("%v", err)
@@ -135,6 +145,7 @@ func btcdMain(serverChan chan<- *server) error {
 
 		return nil
 	}
+	// drops the CF index from the provided database if exists.
 	if cfg.DropCfIndex {
 		if err := indexers.DropCfIndex(db, interrupt); err != nil {
 			btcdLog.Errorf("%v", err)
@@ -298,15 +309,18 @@ func loadBlockDB() (database.DB, error) {
 
 func main() {
 	// Use all processor cores.
+	// 使用所有的cpu 内核
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	// Block and transaction processing can cause bursty allocations.  This
+	// Block and `transaction processing can cause bursty allocations.  This
 	// limits the garbage collector from excessively overallocating during
 	// bursts.  This value was arrived at with the help of profiling live
 	// usage.
+	// 区块和交易会突然大量分配，这个限制垃圾回收的比例。
 	debug.SetGCPercent(10)
 
 	// Up some limits.
+	// 主要设置的是进程能够打开的最大文件数。
 	if err := limits.SetLimits(); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to set limits: %v\n", err)
 		os.Exit(1)

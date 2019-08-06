@@ -395,10 +395,10 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 // line options.
 //
 // The configuration proceeds as follows:
-// 	1) Start with a default config with sane settings
-// 	2) Pre-parse the command line to check for an alternative config file
-// 	3) Load configuration file overwriting defaults with any specified options
-// 	4) Parse CLI options and overwrite/add any specified options
+// 	1) Start with a default config with sane settings 默认配置。
+// 	2) Pre-parse the command line to check for an alternative config file 预解析配置，并且做一些检查
+// 	3) Load configuration file overwriting defaults with any specified options 加载配置
+// 	4) Parse CLI options and overwrite/add any specified options 解析CLI 选项，并替换默认配置。
 //
 // The above results in btcd functioning properly without any config settings
 // while still allowing the user to override settings with config files and
@@ -406,9 +406,9 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 func loadConfig() (*config, []string, error) {
 	// Default config.
 	cfg := config{
-		ConfigFile:           defaultConfigFile,
+		ConfigFile:           defaultConfigFile, // 默认配置文件。
 		DebugLevel:           defaultLogLevel,
-		MaxPeers:             defaultMaxPeers,
+		MaxPeers:             defaultMaxPeers, // 最大peers
 		BanDuration:          defaultBanDuration,
 		BanThreshold:         defaultBanThreshold,
 		RPCMaxClients:        defaultMaxRPCClients,
@@ -419,7 +419,7 @@ func loadConfig() (*config, []string, error) {
 		DbType:               defaultDbType,
 		RPCKey:               defaultRPCKeyFile,
 		RPCCert:              defaultRPCCertFile,
-		MinRelayTxFee:        mempool.DefaultMinRelayTxFee.ToBTC(),
+		MinRelayTxFee:        mempool.DefaultMinRelayTxFee.ToBTC(), // 最小交易费
 		FreeTxRelayLimit:     defaultFreeTxRelayLimit,
 		TrickleInterval:      defaultTrickleInterval,
 		BlockMinSize:         defaultBlockMinSize,
@@ -442,6 +442,7 @@ func loadConfig() (*config, []string, error) {
 	// help message error can be ignored here since they will be caught by
 	// the final parse below.
 	preCfg := cfg
+	// 生成一个解析器。
 	preParser := newConfigParser(&preCfg, &serviceOpts, flags.HelpFlag)
 	_, err := preParser.Parse()
 	if err != nil {
@@ -512,6 +513,7 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Create the home directory if it doesn't already exist.
+	// 保证 home directory 存在。
 	funcName := "loadConfig"
 	err = os.MkdirAll(defaultHomeDir, 0700)
 	if err != nil {
@@ -532,6 +534,7 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Multiple networks can't be selected simultaneously.
+	// 混合网络不允许同时使用。只允许使用 testnet, regtest, segnet, and simnet 中的一个。
 	numNets := 0
 	// Count number of network flags passed; assign active network params
 	// while we're at it
@@ -546,6 +549,7 @@ func loadConfig() (*config, []string, error) {
 	if cfg.SimNet {
 		numNets++
 		// Also disable dns seeding on the simulation test network.
+		// 在simnet 网络中，就不需要使用DNSSeed了。
 		activeNetParams = &simNetParams
 		cfg.DisableDNSSeed = true
 	}
@@ -562,6 +566,8 @@ func loadConfig() (*config, []string, error) {
 	// according to the default of the active network. The set
 	// configuration value takes precedence over the default value for the
 	// selected network.
+	// 针对特定网络，为non-standard 交易的传播 设置默认规则。
+	// TODO : non-standard 是个啥？在比特币的世界中是个怎样的存在？又是如何被处理的？
 	relayNonStd := activeNetParams.RelayNonStdTxs
 	switch {
 	case cfg.RelayNonStd && cfg.RejectNonStd:
@@ -611,6 +617,7 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Validate database type.
+	// 数据库类型检查，在这一版代码中，只支持了ffldb。
 	if !validDbType(cfg.DbType) {
 		str := "%s: The specified database type [%v] is invalid -- " +
 			"supported types %v"
@@ -633,6 +640,7 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Don't allow ban durations that are too short.
+	// TODO ban durations 干啥用的啊？
 	if cfg.BanDuration < time.Second {
 		str := "%s: The banduration option may not be less than 1s -- parsed [%v]"
 		err := fmt.Errorf(str, funcName, cfg.BanDuration)
@@ -642,6 +650,7 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Validate any given whitelisted IP addresses and networks.
+	// 如果设置了ip白名单，则验证一下，并且加入到白名单列表中。
 	if len(cfg.Whitelists) > 0 {
 		var ip net.IP
 		cfg.whitelists = make([]*net.IPNet, 0, len(cfg.Whitelists))
@@ -673,6 +682,7 @@ func loadConfig() (*config, []string, error) {
 		}
 	}
 
+	// 下面是一些基于系统特定的规则，等后面用到的时候，就能理解为什么这么设置了。暂时先不用关注这些为什么这么设置。
 	// --addPeer and --connect do not mix.
 	if len(cfg.AddPeers) > 0 && len(cfg.ConnectPeers) > 0 {
 		str := "%s: the --addpeer and --connect options can not be " +

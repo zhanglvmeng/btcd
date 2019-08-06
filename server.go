@@ -2615,6 +2615,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	// the addrindex uses data from the txindex during catchup.  If the
 	// addrindex is run first, it may not have the transactions from the
 	// current block indexed.
+	// 从DB中读取已经有的交易索引、addr索引。  --begin
 	var indexes []indexers.Indexer
 	if cfg.TxIndex || cfg.AddrIndex {
 		// Enable transaction index if address index is enabled since it
@@ -2635,6 +2636,8 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		s.addrIndex = indexers.NewAddrIndex(db, chainParams)
 		indexes = append(indexes, s.addrIndex)
 	}
+	// 从DB中读取已经有的交易索引、addr索引。  -- end
+
 	if !cfg.NoCFilters {
 		indxLog.Info("Committed filter index is enabled")
 		s.cfIndex = indexers.NewCfIndex(db, chainParams)
@@ -2647,13 +2650,14 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		indexManager = indexers.NewManager(db, indexes)
 	}
 
+	// TODO checkpoints 干啥用的啊？
 	// Merge given checkpoints with the default ones unless they are disabled.
 	var checkpoints []chaincfg.Checkpoint
 	if !cfg.DisableCheckpoints {
 		checkpoints = mergeCheckpoints(s.chainParams.Checkpoints, cfg.addCheckpoints)
 	}
 
-	// Create a new block chain instance with the appropriate configuration.
+	// 使用当前的配置，创建一个区块链实例。
 	var err error
 	s.chain, err = blockchain.New(&blockchain.Config{
 		DB:           s.db,
@@ -2669,6 +2673,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		return nil, err
 	}
 
+	// 开始交易部分的处理 -- begin
 	// Search for a FeeEstimator state in the database. If none can be found
 	// or if it cannot be loaded, create a new one.
 	db.Update(func(tx database.Tx) error {
@@ -2698,7 +2703,9 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 			mempool.DefaultEstimateFeeMaxRollback,
 			mempool.DefaultEstimateFeeMinRegisteredBlocks)
 	}
+	// 开始交易部分的处理 -- end
 
+	// 创建内存池。
 	txC := mempool.Config{
 		Policy: mempool.Policy{
 			DisableRelayPriority: cfg.NoRelayPriority,
@@ -2726,6 +2733,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	}
 	s.txMemPool = mempool.New(&txC)
 
+	// 创建网络同步管理器 。 同步信息包括 block, tx, and inv。
 	s.syncManager, err = netsync.New(&netsync.Config{
 		PeerNotifier:       &s,
 		Chain:              s.chain,
@@ -2744,6 +2752,8 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	//
 	// NOTE: The CPU miner relies on the mempool, so the mempool has to be
 	// created before calling the function to create the CPU miner.
+	// 矿工相关。
+	// 先定了一个policy, 然后定义了区块生成魔板，最后定义了一个cpu矿工。
 	policy := mining.Policy{
 		BlockMinWeight:    cfg.BlockMinWeight,
 		BlockMaxWeight:    cfg.BlockMaxWeight,
@@ -2810,7 +2820,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		}
 	}
 
-	// Create a connection manager.
+	// Create a connection manager. 创建连接管理器。
 	targetOutbound := defaultTargetOutbound
 	if cfg.MaxPeers < targetOutbound {
 		targetOutbound = cfg.MaxPeers
@@ -2846,6 +2856,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		})
 	}
 
+	// RPC listen addresss 相关。
 	if !cfg.DisableRPC {
 		// Setup listeners for the configured RPC listen addresses and
 		// TLS settings.
