@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 package: github.com/zhanglvmeng/btcd
 import:
 - package: github.com/btcsuite/btcd
@@ -22,6 +23,10 @@ import:
   - rpcclient
   - txscript
   - wire
+=======
+package: github.com/btcsuite/btcd
+import:
+>>>>>>> 增加了一些细节日志
 - package: github.com/btcsuite/btclog
 - package: github.com/btcsuite/btcutil
   subpackages:
@@ -59,6 +64,10 @@ import:
   version: v1.0.0
   subpackages:
   - rotator
+<<<<<<< HEAD
 - package: golang.org/x/crypto
   subpackages:
   - ripemd160
+=======
+- package: golang.org/x/crypto/ripemd160
+>>>>>>> 增加了一些细节日志

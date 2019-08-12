@@ -361,6 +361,10 @@ out:
 func (a *AddrManager) savePeers() {
 	a.mtx.Lock()
 	defer a.mtx.Unlock()
+<<<<<<< HEAD
+=======
+	fmt.Println("welcome to zp's btcd, addrManager savePeers", "保存address，方便下次启动时能够直接读取 ~")
+>>>>>>> 增加了一些细节日志
 
 	// First we make a serialisable datastructure so we can encode it to
 	// json.
@@ -424,6 +428,10 @@ func (a *AddrManager) loadPeers() {
 	a.mtx.Lock()
 	defer a.mtx.Unlock()
 
+<<<<<<< HEAD
+=======
+	fmt.Println("welcome to zp's btcd, addrManager Start", "加载peer: 从已保存的file中 加载peer~")
+>>>>>>> 增加了一些细节日志
 	err := a.deserializePeers(a.peersFile)
 	if err != nil {
 		log.Errorf("Failed to parse file %s: %v", a.peersFile, err)
@@ -573,10 +581,18 @@ func (a *AddrManager) Start() {
 	log.Trace("Starting address manager")
 
 	// Load peers we already know about from file.
+<<<<<<< HEAD
+=======
+	fmt.Println("welcome to zp's btcd, addrManager Start", "加载peer ~")
+>>>>>>> 增加了一些细节日志
 	a.loadPeers()
 
 	// Start the address ticker to save addresses periodically.
 	a.wg.Add(1)
+<<<<<<< HEAD
+=======
+	fmt.Println("welcome to zp's btcd, addrManager Start", "启动addressHandler。主要的作用是记录address，方便下次重启时可以直接读取 ~")
+>>>>>>> 增加了一些细节日志
 	go a.addressHandler()
 }
 

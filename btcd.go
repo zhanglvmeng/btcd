@@ -71,6 +71,8 @@ func btcdMain(serverChan chan<- *server) error {
 	btcdLog.Infof("Welcome to zhangpeng's bitcoin world~~~~")
 	// Enable http profiling server if requested.
 	// 设定 http profiling server .
+
+	// Enable http profiling server if requested.
 	if cfg.Profile != "" {
 		go func() {
 			listenAddr := net.JoinHostPort("", cfg.Profile)
@@ -321,6 +323,15 @@ func main() {
 
 	// Up some limits.
 	// 主要设置的是进程能够打开的最大文件数。
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	// Block and transaction processing can cause bursty allocations.  This
+	// limits the garbage collector from excessively overallocating during
+	// bursts.  This value was arrived at with the help of profiling live
+	// usage.
+	debug.SetGCPercent(10)
+
+	// Up some limits.
 	if err := limits.SetLimits(); err != nil {
 		fmt.Fprintf(os.Stderr, "failed to set limits: %v\n", err)
 		os.Exit(1)

@@ -880,6 +880,8 @@ func handleEstimateFee(s *rpcServer, cmd interface{}, closeChan <-chan struct{})
 func handleGenerate(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
 	// Respond with an error if there are no addresses to pay the
 	// created blocks to.
+	// 挖矿，必须有接收coinbase奖励的地址。
+	fmt.Println("welcome to zp's btcd, mining need address")
 	if len(cfg.miningAddrs) == 0 {
 		return nil, &btcjson.RPCError{
 			Code: btcjson.ErrRPCInternal.Code,
@@ -890,6 +892,8 @@ func handleGenerate(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 
 	// Respond with an error if there's virtually 0 chance of mining a block
 	// with the CPU.
+	fmt.Println("welcome to zp's btcd, mining need supported by CPU")
+	// 挖矿 需要CPU支持。
 	if !s.cfg.ChainParams.GenerateSupported {
 		return nil, &btcjson.RPCError{
 			Code: btcjson.ErrRPCDifficulty,
@@ -903,6 +907,7 @@ func handleGenerate(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 	c := cmd.(*btcjson.GenerateCmd)
 
 	// Respond with an error if the client is requesting 0 blocks to be generated.
+	// 挖矿数量限制。必须产生的区块大于0
 	if c.NumBlocks == 0 {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCInternal.Code,
@@ -913,7 +918,9 @@ func handleGenerate(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 	// Create a reply
 	reply := make([]string, c.NumBlocks)
 
+	fmt.Println("welcome to zp's btcd, begin mining")
 	blockHashes, err := s.cfg.CPUMiner.GenerateNBlocks(c.NumBlocks)
+	fmt.Println("welcome to zp's btcd, mining done")
 	if err != nil {
 		return nil, &btcjson.RPCError{
 			Code:    btcjson.ErrRPCInternal.Code,
@@ -3804,6 +3811,7 @@ func (s *rpcServer) checkAuth(r *http.Request, require bool) (bool, bool, error)
 
 	// Check for limited auth first as in environments with limited users, those
 	// are probably expected to have a higher volume of calls
+	// 比较用户信息。
 	limitcmp := subtle.ConstantTimeCompare(authsha[:], s.limitauthsha[:])
 	if limitcmp == 1 {
 		return true, false, nil
@@ -3835,6 +3843,7 @@ type parsedRPCCmd struct {
 // commands which are not recognized or not implemented will return an error
 // suitable for use in replies.
 func (s *rpcServer) standardCmdResult(cmd *parsedRPCCmd, closeChan <-chan struct{}) (interface{}, error) {
+	fmt.Println("welcome to zp's btcd , process RPC request. method is " + cmd.method)
 	handler, ok := rpcHandlers[cmd.method]
 	if ok {
 		goto handled
@@ -4058,6 +4067,7 @@ func (s *rpcServer) Start() {
 		ReadTimeout: time.Second * rpcAuthTimeoutSeconds,
 	}
 	rpcServeMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		rpcsLog.Info("welcome to zp's btcd, rpc pattern is /")
 		w.Header().Set("Connection", "close")
 		w.Header().Set("Content-Type", "application/json")
 		r.Close = true
@@ -4070,6 +4080,8 @@ func (s *rpcServer) Start() {
 		// Keep track of the number of connected clients.
 		s.incrementClients()
 		defer s.decrementClients()
+		// 鉴权
+		rpcsLog.Info("welcome to zp's btcd, rpc pattern is /， before checkAuth")
 		_, isAdmin, err := s.checkAuth(r, true)
 		if err != nil {
 			jsonAuthFail(w)
@@ -4077,11 +4089,14 @@ func (s *rpcServer) Start() {
 		}
 
 		// Read and respond to the request.
+		rpcsLog.Info("welcome to zp's btcd, rpc pattern is /, begin process json rpc")
 		s.jsonRPCRead(w, r, isAdmin)
 	})
 
 	// Websocket endpoint.
 	rpcServeMux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		rpcsLog.Info("welcome to zp's btcd, rpc pattern is /ws -- process websocket endpoint")
+		rpcsLog.Info("welcome to zp's btcd, rpc pattern is /ws -- checkAuth")
 		authenticated, isAdmin, err := s.checkAuth(r, false)
 		if err != nil {
 			jsonAuthFail(w)
@@ -4099,6 +4114,8 @@ func (s *rpcServer) Start() {
 			http.Error(w, "400 Bad Request.", http.StatusBadRequest)
 			return
 		}
+		rpcsLog.Info("welcome to zp's btcd, new a websocket handler")
+		// 新建一个websocket 连接， 接收请求，然后响应。
 		s.WebsocketHandler(ws, r.RemoteAddr, authenticated, isAdmin)
 	})
 
@@ -4106,6 +4123,8 @@ func (s *rpcServer) Start() {
 		s.wg.Add(1)
 		go func(listener net.Listener) {
 			rpcsLog.Infof("RPC server listening on %s", listener.Addr())
+			rpcsLog.Info("welcome to zp's btcd, listening ...")
+			// 建立websocket 链接。为每一个listener 建立一个goroutine, 接收请求，然后调用handler 方法处理。
 			httpServer.Serve(listener)
 			rpcsLog.Tracef("RPC listener done for %s", listener.Addr())
 			s.wg.Done()

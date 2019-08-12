@@ -67,11 +67,19 @@ func newHTTPClient(cfg *config) (*http.Client, error) {
 // field or the error field depending on whether or not there is an error.
 func sendPostRequest(marshalledJSON []byte, cfg *config) ([]byte, error) {
 	// Generate a request to the configured RPC server.
+<<<<<<< HEAD
+=======
+	fmt.Println("welcome to zp's btcctl, in method sendPostRequest")
+>>>>>>> 增加了一些细节日志
 	protocol := "http"
 	if !cfg.NoTLS {
 		protocol = "https"
 	}
 	url := protocol + "://" + cfg.RPCServer
+<<<<<<< HEAD
+=======
+	fmt.Println("welcome to zp's btcctl, in method sendPostRequest, rpc url is " + url)
+>>>>>>> 增加了一些细节日志
 	bodyReader := bytes.NewReader(marshalledJSON)
 	httpRequest, err := http.NewRequest("POST", url, bodyReader)
 	if err != nil {

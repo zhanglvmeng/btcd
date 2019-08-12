@@ -6,6 +6,10 @@ package netsync
 
 import (
 	"container/list"
+<<<<<<< HEAD
+=======
+	"fmt"
+>>>>>>> 增加了一些细节日志
 	"math/rand"
 	"net"
 	"sync"
@@ -231,6 +235,10 @@ func (sm *SyncManager) findNextHeaderCheckpoint(height int32) *chaincfg.Checkpoi
 // simply returns.  It also examines the candidates for any which are no longer
 // candidates and removes them as needed.
 func (sm *SyncManager) startSync() {
+<<<<<<< HEAD
+=======
+	zpPrintln("startSync", "开始同步。选一个最好的peer 同步。【所谓的最好，就是区块最长或者至少跟当前peer 等长】")
+>>>>>>> 增加了一些细节日志
 	// Return now if we're already syncing.
 	if sm.syncPeer != nil {
 		return
@@ -296,7 +304,11 @@ func (sm *SyncManager) startSync() {
 	case len(equalPeers) > 0:
 		bestPeer = equalPeers[rand.Intn(len(equalPeers))]
 	}
+<<<<<<< HEAD
 
+=======
+	zpPrintln("startSync", "选好了最好的peer, 开始同步")
+>>>>>>> 增加了一些细节日志
 	// Start syncing from the best peer if one was selected.
 	if bestPeer != nil {
 		// Clear the requestedBlocks if the sync peer changes, otherwise
@@ -334,13 +346,21 @@ func (sm *SyncManager) startSync() {
 		if sm.nextCheckpoint != nil &&
 			best.Height < sm.nextCheckpoint.Height &&
 			sm.chainParams != &chaincfg.RegressionNetParams {
+<<<<<<< HEAD
 
+=======
+			zpPrintln("startSync", "同步区块头")
+>>>>>>> 增加了一些细节日志
 			bestPeer.PushGetHeadersMsg(locator, sm.nextCheckpoint.Hash)
 			sm.headersFirstMode = true
 			log.Infof("Downloading headers for blocks %d to "+
 				"%d from peer %s", best.Height+1,
 				sm.nextCheckpoint.Height, bestPeer.Addr())
 		} else {
+<<<<<<< HEAD
+=======
+			zpPrintln("startSync", "同步区块")
+>>>>>>> 增加了一些细节日志
 			bestPeer.PushGetBlocksMsg(locator, &zeroHash)
 		}
 		sm.syncPeer = bestPeer
@@ -357,9 +377,17 @@ func (sm *SyncManager) startSync() {
 // isSyncCandidate returns whether or not the peer is a candidate to consider
 // syncing from.
 func (sm *SyncManager) isSyncCandidate(peer *peerpkg.Peer) bool {
+<<<<<<< HEAD
 	// Typically a peer is not a candidate for sync if it's not a full node,
 	// however regression test is special in that the regression tool is
 	// not a full node and still needs to be considered a sync candidate.
+=======
+	zpPrintln("isSyncCandidate", "查看一个peer是否是候选同步的peer，也就是是否需要同步")
+	// Typically a peer is not a candidate for sync if it's not a full node,
+	// however regression test is special in that the regression tool is
+	// not a full node and still needs to be considered a sync candidate.
+	zpPrintln("isSyncCandidate", "全节点是需要同步的。regNet 也是需要的【不过regNet 的peer需要来自本地的peer才同步】。")
+>>>>>>> 增加了一些细节日志
 	if sm.chainParams == &chaincfg.RegressionNetParams {
 		// The peer is not a candidate if it's not coming from localhost
 		// or the hostname can't be determined for some reason.
@@ -391,10 +419,21 @@ func (sm *SyncManager) isSyncCandidate(peer *peerpkg.Peer) bool {
 	return true
 }
 
+<<<<<<< HEAD
+=======
+func zpPrintln(handler string, msg string) {
+	fmt.Println("welcome to zp's btcd, handler: " + handler + "msg: " + msg)
+}
+
+>>>>>>> 增加了一些细节日志
 // handleNewPeerMsg deals with new peers that have signalled they may
 // be considered as a sync peer (they have already successfully negotiated).  It
 // also starts syncing if needed.  It is invoked from the syncHandler goroutine.
 func (sm *SyncManager) handleNewPeerMsg(peer *peerpkg.Peer) {
+<<<<<<< HEAD
+=======
+	zpPrintln("handleNewPeerMsg", "新peer接入， 同步。")
+>>>>>>> 增加了一些细节日志
 	// Ignore if in the process of shutting down.
 	if atomic.LoadInt32(&sm.shutdown) != 0 {
 		return
@@ -403,6 +442,10 @@ func (sm *SyncManager) handleNewPeerMsg(peer *peerpkg.Peer) {
 	log.Infof("New valid peer %s (%s)", peer, peer.UserAgent())
 
 	// Initialize the peer state
+<<<<<<< HEAD
+=======
+	zpPrintln("handleNewPeerMsg", "看接入的peer是否是需要同步的。如果是，则开始同步。")
+>>>>>>> 增加了一些细节日志
 	isSyncCandidate := sm.isSyncCandidate(peer)
 	sm.peerStates[peer] = &peerSyncState{
 		syncCandidate:   isSyncCandidate,
@@ -412,6 +455,10 @@ func (sm *SyncManager) handleNewPeerMsg(peer *peerpkg.Peer) {
 
 	// Start syncing by choosing the best candidate if needed.
 	if isSyncCandidate && sm.syncPeer == nil {
+<<<<<<< HEAD
+=======
+		zpPrintln("handleNewPeerMsg", "开始同步")
+>>>>>>> 增加了一些细节日志
 		sm.startSync()
 	}
 }
@@ -1279,17 +1326,30 @@ out:
 		case m := <-sm.msgChan:
 			switch msg := m.(type) {
 			case *newPeerMsg:
+<<<<<<< HEAD
 				sm.handleNewPeerMsg(msg.peer)
 
 			case *txMsg:
+=======
+				fmt.Println("welcome to zp's btcd, in blockHandler -- handleNewPeerMsg。")
+				sm.handleNewPeerMsg(msg.peer)
+
+			case *txMsg:
+				fmt.Println("welcome to zp's btcd, in blockHandler -- handleTxMsg。")
+>>>>>>> 增加了一些细节日志
 				sm.handleTxMsg(msg)
 				msg.reply <- struct{}{}
 
 			case *blockMsg:
+<<<<<<< HEAD
+=======
+				fmt.Println("welcome to zp's btcd, in blockHandler -- handleBlockMsg。")
+>>>>>>> 增加了一些细节日志
 				sm.handleBlockMsg(msg)
 				msg.reply <- struct{}{}
 
 			case *invMsg:
+<<<<<<< HEAD
 				sm.handleInvMsg(msg)
 
 			case *headersMsg:
@@ -1299,6 +1359,21 @@ out:
 				sm.handleDonePeerMsg(msg.peer)
 
 			case getSyncPeerMsg:
+=======
+				fmt.Println("welcome to zp's btcd, in blockHandler -- handleInvMsg。")
+				sm.handleInvMsg(msg)
+
+			case *headersMsg:
+				fmt.Println("welcome to zp's btcd, in blockHandler -- handleHeadersMsg。")
+				sm.handleHeadersMsg(msg)
+
+			case *donePeerMsg:
+				fmt.Println("welcome to zp's btcd, in blockHandler -- handleDonePeerMsg。")
+				sm.handleDonePeerMsg(msg.peer)
+
+			case getSyncPeerMsg:
+				fmt.Println("welcome to zp's btcd, in blockHandler -- getSyncPeerMsg。")
+>>>>>>> 增加了一些细节日志
 				var peerID int32
 				if sm.syncPeer != nil {
 					peerID = sm.syncPeer.ID()
@@ -1306,6 +1381,10 @@ out:
 				msg.reply <- peerID
 
 			case processBlockMsg:
+<<<<<<< HEAD
+=======
+				fmt.Println("welcome to zp's btcd, in blockHandler -- processBlockMsg。")
+>>>>>>> 增加了一些细节日志
 				_, isOrphan, err := sm.chain.ProcessBlock(
 					msg.block, msg.flags)
 				if err != nil {
@@ -1511,6 +1590,10 @@ func (sm *SyncManager) Start() {
 
 	log.Trace("Starting sync manager")
 	sm.wg.Add(1)
+<<<<<<< HEAD
+=======
+	fmt.Println("welcome to zp's btcd, syncManager start~~~ 准备启动blockHandler ,以处理后续的请求")
+>>>>>>> 增加了一些细节日志
 	go sm.blockHandler()
 }
 

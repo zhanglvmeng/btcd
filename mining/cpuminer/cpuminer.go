@@ -204,6 +204,10 @@ func (m *CPUMiner) submitBlock(block *btcutil.Block) bool {
 // This function will return early with false when conditions that trigger a
 // stale block such as a new block showing up or periodically when there are
 // new transactions and enough time has elapsed without finding a solution.
+<<<<<<< HEAD
+=======
+// 找到一个小于 target difficulty 的nonce/extra nonce/时间戳 的组合。
+>>>>>>> 增加了一些细节日志
 func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, blockHeight int32,
 	ticker *time.Ticker, quit chan struct{}) bool {
 
@@ -544,6 +548,10 @@ func (m *CPUMiner) NumWorkers() int32 {
 // detecting when it is performing stale work and reacting accordingly by
 // generating a new block template.  When a block is solved, it is submitted.
 // The function returns a list of the hashes of generated blocks.
+<<<<<<< HEAD
+=======
+// 按照约定的模板 产生区块。产生之后，提交。
+>>>>>>> 增加了一些细节日志
 func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 	m.Lock()
 
@@ -559,6 +567,10 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 
 	m.speedMonitorQuit = make(chan struct{})
 	m.wg.Add(1)
+<<<<<<< HEAD
+=======
+	// 单独起一个monitor 的 routine。 监控挖矿的进度。
+>>>>>>> 增加了一些细节日志
 	go m.speedMonitor()
 
 	m.Unlock()
@@ -570,6 +582,10 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 
 	// Start a ticker which is used to signal checks for stale work and
 	// updates to the speed monitor.
+<<<<<<< HEAD
+=======
+	// 启动一个时间滴答， 每个15秒更新 speed monitor .
+>>>>>>> 增加了一些细节日志
 	ticker := time.NewTicker(time.Second * hashUpdateSecs)
 	defer ticker.Stop()
 
@@ -589,12 +605,20 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 		curHeight := m.g.BestSnapshot().Height
 
 		// Choose a payment address at random.
+<<<<<<< HEAD
+=======
+		// 创建地址的随机数
+>>>>>>> 增加了一些细节日志
 		rand.Seed(time.Now().UnixNano())
 		payToAddr := m.cfg.MiningAddrs[rand.Intn(len(m.cfg.MiningAddrs))]
 
 		// Create a new block template using the available transactions
 		// in the memory pool as a source of transactions to potentially
 		// include in the block.
+<<<<<<< HEAD
+=======
+		// 创建新的区块模板。区块中包含了一些可用的交易。
+>>>>>>> 增加了一些细节日志
 		template, err := m.g.NewBlockTemplate(payToAddr)
 		m.submitBlockLock.Unlock()
 		if err != nil {
@@ -608,9 +632,19 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 		// with false when conditions that trigger a stale block, so
 		// a new block template can be generated.  When the return is
 		// true a solution was found, so submit the solved block.
+<<<<<<< HEAD
 		if m.solveBlock(template.Block, curHeight+1, ticker, nil) {
 			block := btcutil.NewBlock(template.Block)
 			m.submitBlock(block)
+=======
+		// 找到一个小于 target difficulty 的nonce/extra nonce/时间戳 的组合。
+		fmt.Println("welcome to zp's btcd, solveBlock : 找到一个小于 target difficulty 的nonce/extra nonce/时间戳 的组合。")
+		if m.solveBlock(template.Block, curHeight+1, ticker, nil) {
+			block := btcutil.NewBlock(template.Block)
+			fmt.Println("welcome to zp's btcd, 挖完，通知给网络中其他节点，等待他们的验证。")
+			m.submitBlock(block)
+			fmt.Println("welcome to zp's btcd, 通知完毕。")
+>>>>>>> 增加了一些细节日志
 			blockHashes[i] = block.Hash()
 			i++
 			if i == n {

@@ -1562,9 +1562,11 @@ func (s *server) pushMerkleBlockMsg(sp *serverPeer, hash *chainhash.Hash,
 // handleUpdatePeerHeight updates the heights of all peers who were known to
 // announce a block we recently accepted.
 func (s *server) handleUpdatePeerHeights(state *peerState, umsg updatePeerHeightsMsg) {
+	zpPrintln("handleUpdatePeerHeights", "当一个区块达到，当前server要通过他所有连接的peer, 包含inbound和outbound")
 	state.forAllPeers(func(sp *serverPeer) {
 		// The origin peer should already have the updated height.
 		if sp.Peer == umsg.originPeer {
+			zpPrintln("handleUpdatePeerHeights", "已经更新过了")
 			return
 		}
 
@@ -1594,14 +1596,17 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 		return false
 	}
 
-	// Disconnect peers with unwanted user agents.
+	// Disconnect peers with unwanted user agents. 过滤某些UA的peer
 	if sp.HasUndesiredUserAgent(s.agentBlacklist, s.agentWhitelist) {
+		zpPrintln("handleAddPeerMsg", "根据黑白名单，过滤某些UA")
 		sp.Disconnect()
 		return false
 	}
 
 	// Ignore new peers if we're shutting down.
+	// 当前服务如果关闭了，则不接收新的peer.
 	if atomic.LoadInt32(&s.shutdown) != 0 {
+		zpPrintln("handleAddPeerMsg", "当前服务如果关闭了，则不接收新的peer")
 		srvrLog.Infof("New peer %s ignored - server is shutting down", sp)
 		sp.Disconnect()
 		return false
@@ -1616,6 +1621,7 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 	}
 	if banEnd, ok := state.banned[host]; ok {
 		if time.Now().Before(banEnd) {
+			zpPrintln("handleAddPeerMsg", "当前peer 的 host 被禁用了。")
 			srvrLog.Debugf("Peer %s is banned for another %v - disconnecting",
 				host, time.Until(banEnd))
 			sp.Disconnect()
@@ -1630,6 +1636,7 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 
 	// Limit max number of total peers.
 	if state.Count() >= cfg.MaxPeers {
+		zpPrintln("handleAddPeerMsg", "当前服务连接的peer已经达到上限")
 		srvrLog.Infof("Max peers reached [%d] - disconnecting peer %s",
 			cfg.MaxPeers, sp)
 		sp.Disconnect()
@@ -1641,8 +1648,11 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 	// Add the new peer and start it.
 	srvrLog.Debugf("New peer %s", sp)
 	if sp.Inbound() {
+		zpPrintln("handleAddPeerMsg", "要接入的peer是 inbound")
 		state.inboundPeers[sp.ID()] = sp
+		zpPrintln("handleAddPeerMsg", "将 要接入的peer 放入当前server 的inboundPeers 数组中")
 	} else {
+		zpPrintln("handleAddPeerMsg", "要接入的peer是 outbound")
 		state.outboundGroups[addrmgr.GroupKey(sp.NA())]++
 		if sp.persistent {
 			state.persistentPeers[sp.ID()] = sp
@@ -1657,6 +1667,8 @@ func (s *server) handleAddPeerMsg(state *peerState, sp *serverPeer) bool {
 // handleDonePeerMsg deals with peers that have signalled they are done.  It is
 // invoked from the peerHandler goroutine.
 func (s *server) handleDonePeerMsg(state *peerState, sp *serverPeer) {
+	zpPrintln("handleDonePeerMsg", "首先从server state 对应的peer数组中，删除对应的peer")
+	zpPrintln("handleDonePeerMsg", "然后，端口连接")
 	var list map[int32]*serverPeer
 	if sp.persistent {
 		list = state.persistentPeers
@@ -1683,6 +1695,7 @@ func (s *server) handleDonePeerMsg(state *peerState, sp *serverPeer) {
 
 	// Update the address' last seen time if the peer has acknowledged
 	// our version and has sent us its version as well.
+	zpPrintln("handleDonePeerMsg", "如果peer与当前server已经互换了version， 【彼此认可了】， 则在地址管理器中，建立连接。其实没太看懂。。。")
 	if sp.VerAckReceived() && sp.VersionKnown() && sp.NA() != nil {
 		s.addrManager.Connected(sp.NA())
 	}
@@ -1694,20 +1707,24 @@ func (s *server) handleDonePeerMsg(state *peerState, sp *serverPeer) {
 // handleBanPeerMsg deals with banning peers.  It is invoked from the
 // peerHandler goroutine.
 func (s *server) handleBanPeerMsg(state *peerState, sp *serverPeer) {
+	zpPrintln("handleBanPeerMsg", "接收到了banPeerMsg")
 	host, _, err := net.SplitHostPort(sp.Addr())
 	if err != nil {
 		srvrLog.Debugf("can't split ban peer %s %v", sp.Addr(), err)
 		return
 	}
+	zpPrintln("handleBanPeerMsg", "查看peer的方向，是inbound 还是outbound?")
 	direction := directionString(sp.Inbound())
 	srvrLog.Infof("Banned peer %s (%s) for %v", host, direction,
 		cfg.BanDuration)
+	zpPrintln("handleBanPeerMsg", "放入当前server的banned host列表中。")
 	state.banned[host] = time.Now().Add(cfg.BanDuration)
 }
 
 // handleRelayInvMsg deals with relaying inventory to peers that are not already
 // known to have it.  It is invoked from the peerHandler goroutine.
 func (s *server) handleRelayInvMsg(state *peerState, msg relayMsg) {
+	zpPrintln("handleRelayInvMsg", "传输库存给当前server所有有连接的peer, 包括inbound 和 outbound")
 	state.forAllPeers(func(sp *serverPeer) {
 		if !sp.Connected() {
 			return
@@ -1717,6 +1734,7 @@ func (s *server) handleRelayInvMsg(state *peerState, msg relayMsg) {
 		// generate and send a headers message instead of an inventory
 		// message.
 		if msg.invVect.Type == wire.InvTypeBlock && sp.WantsHeaders() {
+			zpPrintln("handleRelayInvMsg", "传输block 并且peer想要的是header")
 			blockHeader, ok := msg.data.(wire.BlockHeader)
 			if !ok {
 				peerLog.Warnf("Underlying data for headers" +
@@ -1724,6 +1742,7 @@ func (s *server) handleRelayInvMsg(state *peerState, msg relayMsg) {
 				return
 			}
 			msgHeaders := wire.NewMsgHeaders()
+			zpPrintln("handleRelayInvMsg", "组装header到msg中")
 			if err := msgHeaders.AddBlockHeader(&blockHeader); err != nil {
 				peerLog.Errorf("Failed to add block"+
 					" header: %v", err)
@@ -1734,12 +1753,14 @@ func (s *server) handleRelayInvMsg(state *peerState, msg relayMsg) {
 		}
 
 		if msg.invVect.Type == wire.InvTypeTx {
+			zpPrintln("handleRelayInvMsg", "传输交易")
 			// Don't relay the transaction to the peer when it has
 			// transaction relaying disabled.
 			if sp.relayTxDisabled() {
 				return
 			}
 
+			zpPrintln("handleRelayInvMsg", "获取交易信息")
 			txD, ok := msg.data.(*mempool.TxDesc)
 			if !ok {
 				peerLog.Warnf("Underlying data for tx inv "+
@@ -1750,6 +1771,7 @@ func (s *server) handleRelayInvMsg(state *peerState, msg relayMsg) {
 
 			// Don't relay the transaction if the transaction fee-per-kb
 			// is less than the peer's feefilter.
+			zpPrintln("handleRelayInvMsg", "如果交易的费用效益对端peer的最小费用限制，则不传递。")
 			feeFilter := atomic.LoadInt64(&sp.feeFilter)
 			if feeFilter > 0 && txD.FeePerKB < feeFilter {
 				return
@@ -1757,6 +1779,7 @@ func (s *server) handleRelayInvMsg(state *peerState, msg relayMsg) {
 
 			// Don't relay the transaction if there is a bloom
 			// filter loaded and the transaction doesn't match it.
+			zpPrintln("handleRelayInvMsg", "如果设置了bloom过滤器，且当前交易不匹配，则不传递")
 			if sp.filter.IsLoaded() {
 				if !sp.filter.MatchTxAndUpdate(txD.Tx) {
 					return
@@ -1767,6 +1790,7 @@ func (s *server) handleRelayInvMsg(state *peerState, msg relayMsg) {
 		// Queue the inventory to be relayed with the next batch.
 		// It will be ignored if the peer is already known to
 		// have the inventory.
+		zpPrintln("handleRelayInvMsg", "传输交易消息给对端peer")
 		sp.QueueInventory(msg.invVect)
 	})
 }
@@ -1774,6 +1798,7 @@ func (s *server) handleRelayInvMsg(state *peerState, msg relayMsg) {
 // handleBroadcastMsg deals with broadcasting messages to peers.  It is invoked
 // from the peerHandler goroutine.
 func (s *server) handleBroadcastMsg(state *peerState, bmsg *broadcastMsg) {
+	zpPrintln("handleBroadcastMsg", "广播消息给所有连接的peer【被排除的peer不包含在内】。")
 	state.forAllPeers(func(sp *serverPeer) {
 		if !sp.Connected() {
 			return
@@ -1825,6 +1850,7 @@ type removeNodeMsg struct {
 // handleQuery is the central handler for all queries and commands from other
 // goroutines related to peer state.
 func (s *server) handleQuery(state *peerState, querymsg interface{}) {
+	zpPrintln("handleQuery", "处理来自其他peer的查询请求")
 	switch msg := querymsg.(type) {
 	case getConnCountMsg:
 		nconnected := int32(0)
@@ -2059,13 +2085,16 @@ func (s *server) peerDoneHandler(sp *serverPeer) {
 // peerHandler is used to handle peer operations such as adding and removing
 // peers to and from the server, banning peers, and broadcasting messages to
 // peers.  It must be run in a goroutine.
+// peer管理
 func (s *server) peerHandler() {
 	// Start the address manager and sync manager, both of which are needed
 	// by peers.  This is done here since their lifecycle is closely tied
 	// to this handler and rather than adding more channels to sychronize
 	// things, it's easier and slightly faster to simply start and stop them
 	// in this handler.
+	// 地址管理
 	s.addrManager.Start()
+	// 数据的同步。
 	s.syncManager.Start()
 
 	srvrLog.Tracef("Starting peer handler")
@@ -2078,7 +2107,9 @@ func (s *server) peerHandler() {
 		outboundGroups:  make(map[string]int),
 	}
 
+	// 通过DNSSeed为地址管理器添加peer discover。
 	if !cfg.DisableDNSSeed {
+		zpPrintln("peerHandler", "从DNSSeed 读取peer， 并且添加到address manager 中去~")
 		// Add peers discovered through DNS to the address manager.
 		connmgr.SeedFromDNS(activeNetParams.Params, defaultRequiredServices,
 			btcdLookup, func(addrs []*wire.NetAddress) {
@@ -2090,6 +2121,7 @@ func (s *server) peerHandler() {
 				s.addrManager.AddAddresses(addrs, addrs[0])
 			})
 	}
+	// 链接管理。
 	go s.connManager.Start()
 
 out:
@@ -2293,7 +2325,7 @@ func (s *server) Start() {
 	if atomic.AddInt32(&s.started, 1) != 1 {
 		return
 	}
-
+	zpPrintln("Start", "server start 开始构建了，哈哈哈 ~")
 	srvrLog.Trace("Starting server")
 
 	// Server startup time. Used for the uptime command for uptime calculation.
@@ -2302,6 +2334,7 @@ func (s *server) Start() {
 	// Start the peer handler which in turn starts the address and block
 	// managers.
 	s.wg.Add(1)
+	zpPrintln("Start", "peer Handler gogogo ~")
 	go s.peerHandler()
 
 	if s.nat != nil {
@@ -2549,12 +2582,17 @@ func setupRPCListeners() ([]net.Listener, error) {
 	return listeners, nil
 }
 
+func zpPrintln(method string, msg string) {
+	fmt.Println("welcome to zp's btcd, method: " + method + ", msg: " + msg)
+}
 // newServer returns a new btcd server configured to listen on addr for the
 // bitcoin network type specified by chainParams.  Use start to begin accepting
 // connections from peers.
 func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	db database.DB, chainParams *chaincfg.Params,
 	interrupt <-chan struct{}) (*server, error) {
+	zpPrintln("newServer", "新server 开始构建~")
+	zpPrintln("newServer", "新service ~")
 
 	services := defaultServices
 	if cfg.NoPeerBloomFilters {
@@ -2564,6 +2602,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		services &^= wire.SFNodeCF
 	}
 
+	zpPrintln("newServer", "address manager ~")
 	amgr := addrmgr.New(cfg.DataDir, btcdLookup)
 
 	var listeners []net.Listener
@@ -2586,6 +2625,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		srvrLog.Infof("User-agent whitelist %s", agentWhitelist)
 	}
 
+	zpPrintln("newServer", "server 开始构建了，哈哈哈 ~")
 	s := server{
 		chainParams:          chainParams,
 		addrManager:          amgr,
@@ -2657,8 +2697,9 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		checkpoints = mergeCheckpoints(s.chainParams.Checkpoints, cfg.addCheckpoints)
 	}
 
-	// 使用当前的配置，创建一个区块链实例。
+	// Create a new block chain instance with the appropriate configuration.
 	var err error
+	zpPrintln("newServer", "构建一个新的blockChain ~")
 	s.chain, err = blockchain.New(&blockchain.Config{
 		DB:           s.db,
 		Interrupt:    interrupt,
@@ -2706,6 +2747,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	// 开始交易部分的处理 -- end
 
 	// 创建内存池。
+	zpPrintln("newServer", "mempool 开始构建了，哈哈哈 ~")
 	txC := mempool.Config{
 		Policy: mempool.Policy{
 			DisableRelayPriority: cfg.NoRelayPriority,
@@ -2734,6 +2776,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	s.txMemPool = mempool.New(&txC)
 
 	// 创建网络同步管理器 。 同步信息包括 block, tx, and inv。
+	zpPrintln("newServer", "syncManager 开始构建了，哈哈哈 ~")
 	s.syncManager, err = netsync.New(&netsync.Config{
 		PeerNotifier:       &s,
 		Chain:              s.chain,
@@ -2754,6 +2797,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	// created before calling the function to create the CPU miner.
 	// 矿工相关。
 	// 先定了一个policy, 然后定义了区块生成魔板，最后定义了一个cpu矿工。
+	zpPrintln("newServer", "mining 开始构建了，哈哈哈 ~")
 	policy := mining.Policy{
 		BlockMinWeight:    cfg.BlockMinWeight,
 		BlockMaxWeight:    cfg.BlockMaxWeight,
@@ -2821,6 +2865,8 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	}
 
 	// Create a connection manager. 创建连接管理器。
+	zpPrintln("newServer", "connection 管理器 开始构建了，哈哈哈 ~")
+	// Create a connection manager.
 	targetOutbound := defaultTargetOutbound
 	if cfg.MaxPeers < targetOutbound {
 		targetOutbound = cfg.MaxPeers
@@ -2839,6 +2885,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	}
 	s.connManager = cmgr
 
+	zpPrintln("newServer", "在connection 管理器中，添加永久节点 ~")
 	// Start up persistent peers.
 	permanentPeers := cfg.ConnectPeers
 	if len(permanentPeers) == 0 {
@@ -2868,6 +2915,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 			return nil, errors.New("RPCS: No valid listen address")
 		}
 
+		zpPrintln("newServer", "rpcServer 开始构建了，哈哈哈 ~")
 		s.rpcServer, err = newRPCServer(&rpcserverConfig{
 			Listeners:    rpcListeners,
 			StartupTime:  s.startupTime,

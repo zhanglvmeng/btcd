@@ -2498,7 +2498,6 @@ fetchRange:
 					"progress notification: %v", err)
 				continue
 			}
-
 			if err = wsc.QueueNotification(mn); err == ErrClientQuit {
 				// Finished if the client disconnected.
 				rpcsLog.Debugf("Stopped rescan at height %v "+
@@ -2524,11 +2523,14 @@ fetchRange:
 // the chain (perhaps from a rescanprogress notification) to resume their
 // rescan.
 func handleRescan(wsc *wsClient, icmd interface{}) (interface{}, error) {
+	rpcsLog.Info("welcome to zp's btcd, begin handleRescan")
+	// cmd 中包含了，从哪个区块到哪个区块之间，查找某些address的交易信息。
 	cmd, ok := icmd.(*btcjson.RescanCmd)
 	if !ok {
 		return nil, btcjson.ErrRPCInternal
 	}
 
+	// 根据传入的参数，拼装scan的请求。
 	outpoints := make([]*wire.OutPoint, 0, len(cmd.OutPoints))
 	for i := range cmd.OutPoints {
 		cmdOutpoint := &cmd.OutPoints[i]
@@ -2592,10 +2594,14 @@ func handleRescan(wsc *wsClient, icmd interface{}) (interface{}, error) {
 		lastBlock     *btcutil.Block
 		lastBlockHash *chainhash.Hash
 	)
+
+	// 参数拼装OK，开始scan. 主要是 scanBlockChunks 方法。
+	// scanBlockChunks 方法，会从传入的起始区块开始查找，然后循环遍历到传入的终止区块为止。
 	if len(lookups.addrs) != 0 || len(lookups.unspent) != 0 {
 		// With all the arguments parsed, we'll execute our chunked rescan
 		// which will notify the clients of any address deposits or output
 		// spends.
+		rpcsLog.Info("welcome to zp's btcd, Beginning scanBlockChunks")
 		lastBlock, lastBlockHash, err = scanBlockChunks(
 			wsc, cmd, &lookups, minBlock, maxBlock, chain,
 		)
@@ -2626,6 +2632,7 @@ func handleRescan(wsc *wsClient, icmd interface{}) (interface{}, error) {
 	// received before the rescan RPC returns.  Therefore, another method
 	// is needed to safely inform clients that all rescan notifications have
 	// been sent.
+	// 告诉websocket client rescan done.
 	n := btcjson.NewRescanFinishedNtfn(
 		lastBlockHash.String(), lastBlock.Height(),
 		lastBlock.MsgBlock().Header.Timestamp.Unix(),
@@ -2636,6 +2643,7 @@ func handleRescan(wsc *wsClient, icmd interface{}) (interface{}, error) {
 	} else {
 		// The rescan is finished, so we don't care whether the client
 		// has disconnected at this point, so discard error.
+		rpcsLog.Info("welcome to zp's btcd, scanBlockChunks done. notify the websocket client")
 		_ = wsc.QueueNotification(mn)
 	}
 

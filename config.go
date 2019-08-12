@@ -395,10 +395,10 @@ func newConfigParser(cfg *config, so *serviceOptions, options flags.Options) *fl
 // line options.
 //
 // The configuration proceeds as follows:
-// 	1) Start with a default config with sane settings 默认配置。
-// 	2) Pre-parse the command line to check for an alternative config file 预解析配置，并且做一些检查
-// 	3) Load configuration file overwriting defaults with any specified options 加载配置
-// 	4) Parse CLI options and overwrite/add any specified options 解析CLI 选项，并替换默认配置。
+// 	1) Start with a default config with sane settings
+// 	2) Pre-parse the command line to check for an alternative config file
+// 	3) Load configuration file overwriting defaults with any specified options
+// 	4) Parse CLI options and overwrite/add any specified options
 //
 // The above results in btcd functioning properly without any config settings
 // while still allowing the user to override settings with config files and
@@ -567,7 +567,6 @@ func loadConfig() (*config, []string, error) {
 	// configuration value takes precedence over the default value for the
 	// selected network.
 	// 针对特定网络，为non-standard 交易的传播 设置默认规则。
-	// TODO : non-standard 是个啥？在比特币的世界中是个怎样的存在？又是如何被处理的？
 	relayNonStd := activeNetParams.RelayNonStdTxs
 	switch {
 	case cfg.RelayNonStd && cfg.RejectNonStd:
@@ -640,7 +639,6 @@ func loadConfig() (*config, []string, error) {
 	}
 
 	// Don't allow ban durations that are too short.
-	// TODO ban durations 干啥用的啊？
 	if cfg.BanDuration < time.Second {
 		str := "%s: The banduration option may not be less than 1s -- parsed [%v]"
 		err := fmt.Errorf(str, funcName, cfg.BanDuration)

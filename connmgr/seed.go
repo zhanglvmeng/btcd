@@ -32,8 +32,14 @@ type LookupFunc func(string) ([]net.IP, error)
 // SeedFromDNS uses DNS seeding to populate the address manager with peers.
 func SeedFromDNS(chainParams *chaincfg.Params, reqServices wire.ServiceFlag,
 	lookupFn LookupFunc, seedFn OnSeed) {
+<<<<<<< HEAD
 
 	for _, dnsseed := range chainParams.DNSSeeds {
+=======
+	fmt.Println("welcome to zp's btcd, 利用DNS seed 寻找address， 开始")
+	for _, dnsseed := range chainParams.DNSSeeds {
+		fmt.Println("welcome to zp's btcd, 先找host")
+>>>>>>> 增加了一些细节日志
 		var host string
 		if !dnsseed.HasFiltering || reqServices == wire.SFNodeNetwork {
 			host = dnsseed.Host
@@ -42,6 +48,11 @@ func SeedFromDNS(chainParams *chaincfg.Params, reqServices wire.ServiceFlag,
 		}
 
 		go func(host string) {
+<<<<<<< HEAD
+=======
+			fmt.Println("welcome to zp's btcd, 解析host，然后添加到address manager中")
+
+>>>>>>> 增加了一些细节日志
 			randSource := mrand.New(mrand.NewSource(time.Now().UnixNano()))
 
 			seedpeers, err := lookupFn(host)

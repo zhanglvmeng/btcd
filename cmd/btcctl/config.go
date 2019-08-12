@@ -168,6 +168,10 @@ func cleanAndExpandPath(path string) string {
 // while still allowing the user to override settings with config files and
 // command line options.  Command line options always take precedence.
 func loadConfig() (*config, []string, error) {
+<<<<<<< HEAD
+=======
+	fmt.Println("welcome to zp's btcctl, load config")
+>>>>>>> 增加了一些细节日志
 	// Default config.
 	cfg := config{
 		ConfigFile: defaultConfigFile,
@@ -198,6 +202,10 @@ func loadConfig() (*config, []string, error) {
 	appName := filepath.Base(os.Args[0])
 	appName = strings.TrimSuffix(appName, filepath.Ext(appName))
 	usageMessage := fmt.Sprintf("Use %s -h to show options", appName)
+<<<<<<< HEAD
+=======
+	// 展示版本
+>>>>>>> 增加了一些细节日志
 	if preCfg.ShowVersion {
 		fmt.Println(appName, "version", version())
 		os.Exit(0)
@@ -205,6 +213,10 @@ func loadConfig() (*config, []string, error) {
 
 	// Show the available commands and exit if the associated flag was
 	// specified.
+<<<<<<< HEAD
+=======
+	// 罗列配置
+>>>>>>> 增加了一些细节日志
 	if preCfg.ListCommands {
 		listCommands()
 		os.Exit(0)
@@ -214,8 +226,15 @@ func loadConfig() (*config, []string, error) {
 		// Use config file for RPC server to create default btcctl config
 		var serverConfigPath string
 		if preCfg.Wallet {
+<<<<<<< HEAD
 			serverConfigPath = filepath.Join(btcwalletHomeDir, "btcwallet.conf")
 		} else {
+=======
+			fmt.Println("welcome to zp's btcctl, use wallet cmd")
+			serverConfigPath = filepath.Join(btcwalletHomeDir, "btcwallet.conf")
+		} else {
+			fmt.Println("welcome to zp's btcctl, use btcd cmd")
+>>>>>>> 增加了一些细节日志
 			serverConfigPath = filepath.Join(btcdHomeDir, "btcd.conf")
 		}
 
@@ -273,6 +292,10 @@ func loadConfig() (*config, []string, error) {
 
 	// Add default port to RPC server based on --testnet and --wallet flags
 	// if needed.
+<<<<<<< HEAD
+=======
+	// 这里面指定了 当前是读取btcd 的RPC server  还是 btcwallet 的RPC server.
+>>>>>>> 增加了一些细节日志
 	cfg.RPCServer = normalizeAddress(cfg.RPCServer, cfg.TestNet3,
 		cfg.SimNet, cfg.Wallet)
 
