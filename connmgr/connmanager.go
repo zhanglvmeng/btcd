@@ -226,11 +226,7 @@ func (cm *ConnManager) handleFailedConn(c *ConnReq) {
 // connections so that we remain connected to the network.  Connection requests
 // are processed and mapped by their assigned ids.
 func (cm *ConnManager) connHandler() {
-<<<<<<< HEAD
-
-=======
 	zpPrintln("connHandler", "处理connect 相关的请求~")
->>>>>>> 增加了一些细节日志
 	var (
 		// pending holds all registered conn requests that have yet to
 		// succeed.
@@ -363,10 +359,7 @@ out:
 // NewConnReq creates a new connection request and connects to the
 // corresponding address.
 func (cm *ConnManager) NewConnReq() {
-<<<<<<< HEAD
-=======
 	zpPrintln("NewConnReq", "开始主动连接其他的peer。")
->>>>>>> 增加了一些细节日志
 	if atomic.LoadInt32(&cm.stop) != 0 {
 		return
 	}
@@ -396,10 +389,7 @@ func (cm *ConnManager) NewConnReq() {
 		return
 	}
 
-<<<<<<< HEAD
-=======
 	zpPrintln("NewConnReq", "获取address。")
->>>>>>> 增加了一些细节日志
 	addr, err := cm.cfg.GetNewAddress()
 	if err != nil {
 		select {
@@ -408,15 +398,11 @@ func (cm *ConnManager) NewConnReq() {
 		}
 		return
 	}
-<<<<<<< HEAD
 
-	c.Addr = addr
-=======
 	zpPrintln("NewConnReq", "address 是 " + addr.String())
 
 	c.Addr = addr
 	zpPrintln("NewConnReq", "开始连接 ")
->>>>>>> 增加了一些细节日志
 
 	cm.Connect(c)
 }
@@ -525,17 +511,13 @@ func (cm *ConnManager) listenHandler(listener net.Listener) {
 	log.Tracef("Listener handler done for %s", listener.Addr())
 }
 
-<<<<<<< HEAD
-// Start launches the connection manager and begins connecting to the network.
-func (cm *ConnManager) Start() {
-=======
+
 func zpPrintln(methodName string, msg string)  {
 	fmt.Println("welcome to zp's btcd, method: " + methodName + " , msg: " + msg)
 }
 // Start launches the connection manager and begins connecting to the network.
 func (cm *ConnManager) Start() {
 	zpPrintln("Start", "connection 管理器 start~~~")
->>>>>>> 增加了一些细节日志
 	// Already started?
 	if atomic.AddInt32(&cm.start, 1) != 1 {
 		return
@@ -543,28 +525,17 @@ func (cm *ConnManager) Start() {
 
 	log.Trace("Connection manager started")
 	cm.wg.Add(1)
-<<<<<<< HEAD
-	go cm.connHandler()
-=======
 	go cm.connHandler() // 对所有的主动连接请求 进行管理。
->>>>>>> 增加了一些细节日志
 
 	// Start all the listeners so long as the caller requested them and
 	// provided a callback to be invoked when connections are accepted.
 	if cm.cfg.OnAccept != nil {
 		for _, listner := range cm.cfg.Listeners {
 			cm.wg.Add(1)
-<<<<<<< HEAD
 			go cm.listenHandler(listner)
 		}
 	}
-
-=======
-			go cm.listenHandler(listner) // 被动接受其他peer节点的连接。
-		}
-	}
 	// 发起与其他peer的连接， 默认开启8个。主要是 outbound 的peer
->>>>>>> 增加了一些细节日志
 	for i := atomic.LoadUint64(&cm.connReqCount); i < uint64(cm.cfg.TargetOutbound); i++ {
 		go cm.NewConnReq()
 	}

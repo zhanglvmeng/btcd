@@ -538,6 +538,7 @@ func loadConfig() (*config, []string, error) {
 	numNets := 0
 	// Count number of network flags passed; assign active network params
 	// while we're at it
+	zpPrintln("loadConfig", "默认加载mainNetParam 哦~")
 	if cfg.TestNet3 {
 		numNets++
 		activeNetParams = &testNet3Params

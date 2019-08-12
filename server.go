@@ -2609,6 +2609,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	var nat NAT
 	if !cfg.DisableListen {
 		var err error
+		zpPrintln("newServer", "利用本地address 创建listener")
 		listeners, nat, err = initListeners(amgr, listenAddrs, services)
 		if err != nil {
 			return nil, err
@@ -2714,7 +2715,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 		return nil, err
 	}
 
-	// 开始交易部分的处理 -- begin
+	// 开始交易费用部分的处理 -- begin
 	// Search for a FeeEstimator state in the database. If none can be found
 	// or if it cannot be loaded, create a new one.
 	db.Update(func(tx database.Tx) error {
@@ -2744,7 +2745,7 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 			mempool.DefaultEstimateFeeMaxRollback,
 			mempool.DefaultEstimateFeeMinRegisteredBlocks)
 	}
-	// 开始交易部分的处理 -- end
+	// 开始交易费用部分的处理 -- end
 
 	// 创建内存池。
 	zpPrintln("newServer", "mempool 开始构建了，哈哈哈 ~")
@@ -2826,10 +2827,12 @@ func newServer(listenAddrs, agentBlacklist, agentWhitelist []string,
 	// network.
 	var newAddressFunc func() (net.Addr, error)
 	if !cfg.SimNet && len(cfg.ConnectPeers) == 0 {
+		zpPrintln("newServer", "不是simnet网络，并且没有传入connectPeer, 则开始定义新的AddressFunc")
 		newAddressFunc = func() (net.Addr, error) {
 			for tries := 0; tries < 100; tries++ {
 				addr := s.addrManager.GetAddress()
 				if addr == nil {
+					zpPrintln("newServer", "如果地址管理器中没有可用地址，则返回异常： no valid connect address")
 					break
 				}
 

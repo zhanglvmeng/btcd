@@ -255,11 +255,6 @@ func createCoinbaseTx(params *chaincfg.Params, coinbaseScript []byte, nextBlockH
 	// specified.  Otherwise create a script that allows the coinbase to be
 	// redeemable by anyone.
 	var pkScript []byte
-<<<<<<< HEAD
-	if addr != nil {
-		var err error
-		pkScript, err = txscript.PayToAddrScript(addr)
-=======
 	// 创建脚本： 分为有地址跟无地址两种。
 	if addr != nil {
 		var err error
@@ -267,7 +262,6 @@ func createCoinbaseTx(params *chaincfg.Params, coinbaseScript []byte, nextBlockH
 		// add by zp
 		s := string(pkScript[:])
 		fmt.Println("welcome to zp's btcd , has addr, coinbase pkScript is " + s)
->>>>>>> 增加了一些细节日志
 		if err != nil {
 			return nil, err
 		}
@@ -275,21 +269,15 @@ func createCoinbaseTx(params *chaincfg.Params, coinbaseScript []byte, nextBlockH
 		var err error
 		scriptBuilder := txscript.NewScriptBuilder()
 		pkScript, err = scriptBuilder.AddOp(txscript.OP_TRUE).Script()
-<<<<<<< HEAD
-=======
 		s := string(pkScript[:])
 		fmt.Println("welcome to zp's btcd , no addr , coinbase pkScript is " + s)
->>>>>>> 增加了一些细节日志
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	tx := wire.NewMsgTx(wire.TxVersion)
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 拼装coinbase交易输入")
->>>>>>> 增加了一些细节日志
 	tx.AddTxIn(&wire.TxIn{
 		// Coinbase transactions have no inputs, so previous outpoint is
 		// zero hash and max index.
@@ -298,10 +286,7 @@ func createCoinbaseTx(params *chaincfg.Params, coinbaseScript []byte, nextBlockH
 		SignatureScript: coinbaseScript,
 		Sequence:        wire.MaxTxInSequenceNum,
 	})
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 拼装coinbase交易输出")
->>>>>>> 增加了一些细节日志
 	tx.AddTxOut(&wire.TxOut{
 		Value:    blockchain.CalcBlockSubsidy(nextBlockHeight, params),
 		PkScript: pkScript,
@@ -465,11 +450,8 @@ func NewBlkTmplGenerator(policy *Policy, params *chaincfg.Params,
 //   -----------------------------------  --
 func (g *BlkTmplGenerator) NewBlockTemplate(payToAddress btcutil.Address) (*BlockTemplate, error) {
 	// Extend the most recently known best block.
-<<<<<<< HEAD
-=======
 	// 获取最新的区块
 	fmt.Println("welcome to zp's btcd, get the lastest block")
->>>>>>> 增加了一些细节日志
 	best := g.chain.BestSnapshot()
 	nextBlockHeight := best.Height + 1
 
@@ -481,22 +463,15 @@ func (g *BlkTmplGenerator) NewBlockTemplate(payToAddress btcutil.Address) (*Bloc
 	// ensure the transaction is not a duplicate transaction (paying the
 	// same value to the same public key address would otherwise be an
 	// identical transaction for block version 1).
-<<<<<<< HEAD
-	extraNonce := uint64(0)
-=======
 	// 创建标准的coinbase交易。
 	fmt.Println("welcome to zp's btcd, begin create a standard coinbase transaction")
 	extraNonce := uint64(0)
 	// 创建coinbase 脚本。
->>>>>>> 增加了一些细节日志
 	coinbaseScript, err := standardCoinbaseScript(nextBlockHeight, extraNonce)
 	if err != nil {
 		return nil, err
 	}
-<<<<<<< HEAD
-=======
 	// 利用coinbase 脚本、区块高度、地址 创建coinbase 交易。
->>>>>>> 增加了一些细节日志
 	coinbaseTx, err := createCoinbaseTx(g.chainParams, coinbaseScript,
 		nextBlockHeight, payToAddress)
 	if err != nil {
@@ -510,10 +485,7 @@ func (g *BlkTmplGenerator) NewBlockTemplate(payToAddress btcutil.Address) (*Bloc
 	// number of items that are available for the priority queue.  Also,
 	// choose the initial sort order for the priority queue based on whether
 	// or not there is an area allocated for high-priority transactions.
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 构建交易优先级的队列。")
->>>>>>> 增加了一些细节日志
 	sourceTxns := g.txSource.MiningDescs()
 	sortedByFee := g.policy.BlockPrioritySize == 0
 	priorityQueue := newTxPriorityQueue(len(sourceTxns), sortedByFee)
@@ -522,10 +494,7 @@ func (g *BlkTmplGenerator) NewBlockTemplate(payToAddress btcutil.Address) (*Bloc
 	// generated block with reserved space.  Also create a utxo view to
 	// house all of the input transactions so multiple lookups can be
 	// avoided.
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 选择即将进入区块的交易们。")
->>>>>>> 增加了一些细节日志
 	blockTxns := make([]*btcutil.Tx, 0, len(sourceTxns))
 	blockTxns = append(blockTxns, coinbaseTx)
 	blockUtxos := blockchain.NewUtxoViewpoint()
@@ -543,10 +512,7 @@ func (g *BlkTmplGenerator) NewBlockTemplate(payToAddress btcutil.Address) (*Bloc
 	// a transaction as it is selected for inclusion in the final block.
 	// However, since the total fees aren't known yet, use a dummy value for
 	// the coinbase fee which will be updated later.
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 构建 交易费，op操作的slice。")
->>>>>>> 增加了一些细节日志
 	txFees := make([]int64, 0, len(sourceTxns))
 	txSigOpCosts := make([]int64, 0, len(sourceTxns))
 	txFees = append(txFees, -1) // Updated once known
@@ -586,10 +552,7 @@ mempoolLoop:
 		// Setup dependencies for any transactions which reference
 		// other transactions in the mempool so they can be properly
 		// ordered below.
-<<<<<<< HEAD
-=======
 		fmt.Println("welcome to zp's btcd , 检查交易中的输入 是否是 之前交易的输出。")
->>>>>>> 增加了一些细节日志
 		prioItem := &txPrioItem{tx: tx}
 		for _, txIn := range tx.MsgTx().TxIn {
 			originHash := &txIn.PreviousOutPoint.Hash
@@ -627,18 +590,12 @@ mempoolLoop:
 		// Calculate the final transaction priority using the input
 		// value age sum as well as the adjusted transaction size.  The
 		// formula is: sum(inputValue * inputAge) / adjustedTxSize
-<<<<<<< HEAD
-=======
 		fmt.Println("welcome to zp's btcd , 计算交易的优先级-根据输入value，age, 交易大小。")
->>>>>>> 增加了一些细节日志
 		prioItem.priority = CalcPriority(tx.MsgTx(), utxos,
 			nextBlockHeight)
 
 		// Calculate the fee in Satoshi/kB.
-<<<<<<< HEAD
-=======
 		fmt.Println("welcome to zp's btcd , 计算千字节费用。")
->>>>>>> 增加了一些细节日志
 		prioItem.feePerKB = txDesc.FeePerKB
 		prioItem.fee = txDesc.Fee
 
@@ -653,10 +610,7 @@ mempoolLoop:
 		// code below to avoid a second lookup.
 		mergeUtxoView(blockUtxos, utxos)
 	}
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 交易优先级队列构建完毕。")
->>>>>>> 增加了一些细节日志
 
 	log.Tracef("Priority queue len %d, dependers len %d",
 		priorityQueue.Len(), len(dependers))
@@ -682,28 +636,19 @@ mempoolLoop:
 	witnessIncluded := false
 
 	// Choose which transactions make it into the block.
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 开始选择哪些交易能够进入区块。")
 
->>>>>>> 增加了一些细节日志
 	for priorityQueue.Len() > 0 {
 		// Grab the highest priority (or highest fee per kilobyte
 		// depending on the sort order) transaction.
 		prioItem := heap.Pop(priorityQueue).(*txPrioItem)
 		tx := prioItem.tx
 
-<<<<<<< HEAD
-		switch {
-		// If segregated witness has not been activated yet, then we
-		// shouldn't include any witness transactions in the block.
-=======
 		// 隔离见证交易相关。
 		switch {
 		// If segregated witness has not been activated yet, then we
 		// shouldn't include any witness transactions in the block.
 		// 隔离见证没有激活，则不包含这个交易。
->>>>>>> 增加了一些细节日志
 		case !segwitActive && tx.HasWitness():
 			continue
 
@@ -765,10 +710,7 @@ mempoolLoop:
 			logSkippedDeps(tx, deps)
 			continue
 		}
-<<<<<<< HEAD
-=======
 		fmt.Println("welcome to zp's btcd , 如果op操作超过了区块op操作的上限，则废弃交易。")
->>>>>>> 增加了一些细节日志
 		if blockSigOpCost+int64(sigOpCost) < blockSigOpCost ||
 			blockSigOpCost+int64(sigOpCost) > blockchain.MaxBlockSigOpsCost {
 			log.Tracef("Skipping tx %s because it would "+
@@ -779,10 +721,7 @@ mempoolLoop:
 
 		// Skip free transactions once the block is larger than the
 		// minimum block size.
-<<<<<<< HEAD
-=======
 		fmt.Println("welcome to zp's btcd , 如果交易手续费小于最小的限制，则不包含这个交易。")
->>>>>>> 增加了一些细节日志
 		if sortedByFee &&
 			prioItem.feePerKB < int64(g.policy.TxMinFreeFee) &&
 			blockPlusTxWeight >= g.policy.BlockMinWeight {
@@ -827,10 +766,7 @@ mempoolLoop:
 
 		// Ensure the transaction inputs pass all of the necessary
 		// preconditions before allowing it to be added to the block.
-<<<<<<< HEAD
-=======
 		fmt.Println("welcome to zp's btcd , 校验Input，必须满足要求。")
->>>>>>> 增加了一些细节日志
 		_, err = blockchain.CheckTransactionInputs(tx, nextBlockHeight,
 			blockUtxos, g.chainParams)
 		if err != nil {
@@ -839,10 +775,7 @@ mempoolLoop:
 			logSkippedDeps(tx, deps)
 			continue
 		}
-<<<<<<< HEAD
-=======
 		fmt.Println("welcome to zp's btcd , 验证交易脚本。")
->>>>>>> 增加了一些细节日志
 		err = blockchain.ValidateTransactionScripts(tx, blockUtxos,
 			txscript.StandardVerifyFlags, g.sigCache,
 			g.hashCache)
@@ -857,11 +790,8 @@ mempoolLoop:
 		// an entry for it to ensure any transactions which reference
 		// this one have it available as an input and can ensure they
 		// aren't double spending.
-<<<<<<< HEAD
-=======
 		fmt.Println("welcome to zp's btcd , spendTransaction： 消耗输入，使得其他交易不能使用这笔utxo。")
 
->>>>>>> 增加了一些细节日志
 		spendTransaction(blockUtxos, tx, nextBlockHeight)
 
 		// Add the transaction to the block, increment counters, and
@@ -893,11 +823,8 @@ mempoolLoop:
 	// Now that the actual transactions have been selected, update the
 	// block weight for the real transaction count and coinbase value with
 	// the total fees accordingly.
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 交易选好了，此时要更新奖励（此时包含coinbase跟交易费）以及更新交易数。")
 
->>>>>>> 增加了一些细节日志
 	blockWeight -= wire.MaxVarIntPayload -
 		(uint32(wire.VarIntSerializeSize(uint64(len(blockTxns)))) *
 			blockchain.WitnessScaleFactor)
@@ -948,13 +875,9 @@ mempoolLoop:
 	// Calculate the required difficulty for the block.  The timestamp
 	// is potentially adjusted to ensure it comes after the median time of
 	// the last several blocks per the chain consensus rules.
-<<<<<<< HEAD
-	ts := medianAdjustedTime(best, g.timeSource)
-=======
 	fmt.Println("welcome to zp's btcd , 更新时间戳，使得其可以位于之前几个区块时间中间值之后。")
 	ts := medianAdjustedTime(best, g.timeSource)
 	fmt.Println("welcome to zp's btcd , 计算区块必需的难度值。")
->>>>>>> 增加了一些细节日志
 	reqDifficulty, err := g.chain.CalcNextRequiredDifficulty(ts)
 	if err != nil {
 		return nil, err
@@ -962,20 +885,14 @@ mempoolLoop:
 
 	// Calculate the next expected block version based on the state of the
 	// rule change deployments.
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 计算下一个的version。")
->>>>>>> 增加了一些细节日志
 	nextBlockVersion, err := g.chain.CalcNextBlockVersion()
 	if err != nil {
 		return nil, err
 	}
 
 	// Create a new block ready to be solved.
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 创建一个等待被solved 的候选区块模板。")
->>>>>>> 增加了一些细节日志
 	merkles := blockchain.BuildMerkleTreeStore(blockTxns, false)
 	var msgBlock wire.MsgBlock
 	msgBlock.Header = wire.BlockHeader{
@@ -994,10 +911,7 @@ mempoolLoop:
 	// Finally, perform a full check on the created block against the chain
 	// consensus rules to ensure it properly connects to the current best
 	// chain with no issues.
-<<<<<<< HEAD
-=======
 	fmt.Println("welcome to zp's btcd , 最后再检查一遍，区块是否满足共识规则。")
->>>>>>> 增加了一些细节日志
 	block := btcutil.NewBlock(&msgBlock)
 	block.SetHeight(nextBlockHeight)
 	if err := g.chain.CheckConnectBlockTemplate(block); err != nil {
