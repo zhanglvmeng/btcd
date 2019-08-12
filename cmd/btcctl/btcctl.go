@@ -47,10 +47,7 @@ func usage(errorMessage string) {
 }
 
 func main() {
-<<<<<<< HEAD
-=======
 	// 加载配置
->>>>>>> 增加了一些细节日志
 	cfg, args, err := loadConfig()
 	if err != nil {
 		os.Exit(1)
@@ -62,13 +59,9 @@ func main() {
 
 	// Ensure the specified method identifies a valid registered command and
 	// is one of the usable types.
-<<<<<<< HEAD
-	method := args[0]
-=======
 	// 保证方法是之前已经注册的方法。
 	method := args[0]
 	fmt.Println("welcome to zp's btcclt, method is " + method)
->>>>>>> 增加了一些细节日志
 	usageFlags, err := btcjson.MethodUsageFlags(method)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unrecognized command '%s'\n", method)
@@ -89,10 +82,7 @@ func main() {
 	// too large for the Operating System to allow as a normal command line
 	// parameter, support using '-' as an argument to allow the argument
 	// to be read from a stdin pipe.
-<<<<<<< HEAD
-=======
 	// 处理接下来参数
->>>>>>> 增加了一些细节日志
 	bio := bufio.NewReader(os.Stdin)
 	params := make([]interface{}, 0, len(args[1:]))
 	for _, arg := range args[1:] {
@@ -118,10 +108,7 @@ func main() {
 
 	// Attempt to create the appropriate command using the arguments
 	// provided by the user.
-<<<<<<< HEAD
-=======
 	// 生成cmd, 里面使用了反射。
->>>>>>> 增加了一些细节日志
 	cmd, err := btcjson.NewCmd(method, params...)
 	if err != nil {
 		// Show the error along with its error code when it's a
@@ -145,10 +132,7 @@ func main() {
 
 	// Marshal the command into a JSON-RPC byte slice in preparation for
 	// sending it to the RPC server.
-<<<<<<< HEAD
-=======
 	// 创建jsonRpc的请求
->>>>>>> 增加了一些细节日志
 	marshalledJSON, err := btcjson.MarshalCmd(1, cmd)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -157,23 +141,17 @@ func main() {
 
 	// Send the JSON-RPC request to the server using the user-specified
 	// connection configuration.
-<<<<<<< HEAD
-=======
 	// 发送jsonRPC请求。
 	fmt.Println("welcome to zp's btcctl , begin send requst")
->>>>>>> 增加了一些细节日志
 	result, err := sendPostRequest(marshalledJSON, cfg)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-<<<<<<< HEAD
-=======
 	// 展示结果。
 	fmt.Println("welcome to zp's btcctl , begin show result")
 
->>>>>>> 增加了一些细节日志
 	// Choose how to display the result based on its type.
 	strResult := string(result)
 	if strings.HasPrefix(strResult, "{") || strings.HasPrefix(strResult, "[") {
