@@ -2122,6 +2122,7 @@ func (s *server) peerHandler() {
 			})
 	}
 	// 链接管理。
+	zpPrintln("peerHandler", "上面利用DNSSeed 找到了节点，然后在connectManager的启动过程中，开始链接找到的节点。。。。。。。")
 	go s.connManager.Start()
 
 out:

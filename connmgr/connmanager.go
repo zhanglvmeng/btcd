@@ -535,6 +535,8 @@ func (cm *ConnManager) Start() {
 			go cm.listenHandler(listner)
 		}
 	}
+	zpPrintln("connManagerStart", "开始连接通过DNSSeed 找到的peer~~~")
+
 	// 发起与其他peer的连接， 默认开启8个。主要是 outbound 的peer
 	for i := atomic.LoadUint64(&cm.connReqCount); i < uint64(cm.cfg.TargetOutbound); i++ {
 		go cm.NewConnReq()
